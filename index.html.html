@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>120 Năm Olympic — Câu Chuyện Từ Dữ Liệu</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,600;0,700;0,800;0,900;1,700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300;1,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ══ RESET ══ */
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+
+/* ══ DESIGN TOKENS ══ */
+:root{
+  --void:#020510;
+  --abyss:#030a1a;
+  --deep:#061228;
+  --ocean:#0a1d3e;
+  --navy:#0d2654;
+  --azure:#1e5cd8;
+  --sky:#4285f4;
+  --mist:#8ab4f8;
+
+  --chrome-dark:#1a1f2e;
+  --chrome:#3d4560;
+  --chrome-mid:#6b7899;
+  --chrome-light:#a8b4cc;
+  --chrome-bright:#d0d8ee;
+  --silver:#e8edf8;
+
+  --gold:#c9960a;
+  --gold-mid:#f0b429;
+  --gold-bright:#ffd666;
+  --gold-glow:#ffe4a0;
+
+  --ring-blue:#2a6dd9;
+  --ring-yellow:#d4a800;
+  --ring-green:#1a8a5a;
+  --ring-red:#c0302e;
+
+  /* Hologram silver palette */
+  --holo-1:rgba(180,210,255,0.08);
+  --holo-2:rgba(200,220,255,0.05);
+  --holo-border:rgba(160,200,255,0.22);
+  --holo-shine:rgba(230,240,255,0.12);
+  --holo-glow:rgba(100,160,255,0.15);
+
+  --glass-bg:rgba(8,22,54,0.52);
+  --glass-border:rgba(100,150,255,0.18);
+  --glass-deep:rgba(2,8,22,0.75);
+
+  --txt-primary:#e8edf8;
+  --txt-secondary:#a8b4cc;
+  --txt-muted:#6b7899;
+  --txt-gold:var(--gold-bright);
+
+  --col:700px;
+  --wide:1060px;
+}
+
+body{
+  background:var(--void);
+  color:var(--txt-primary);
+  font-family:'Inter',sans-serif;
+  font-size:17px;
+  line-height:1.75;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ══ BACKGROUND LAYERS ══ */
+.bg-base{
+  position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 160% 80% at 50% -10%, rgba(10,29,62,0.9) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 60% at 85% 25%, rgba(19,64,160,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 10% 70%, rgba(30,92,216,0.1) 0%, transparent 50%),
+    var(--void);
+  pointer-events:none;
+}
+
+/* Noise */
+.bg-noise{
+  position:fixed;inset:0;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;opacity:.7;
+}
+
+/* Silver hologram grid lines */
+.bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(130,170,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(130,170,255,0.03) 1px, transparent 1px);
+  background-size:60px 60px;
+}
+
+/* ══ READING PROGRESS ══ */
+#progress{
+  position:fixed;top:0;left:0;z-index:1000;
+  height:2px;
+  background:linear-gradient(90deg, var(--ring-blue), var(--gold-bright), var(--ring-red));
+  width:0%;transition:width .08s linear;
+  box-shadow:0 0 14px rgba(240,180,41,0.5);
+}
+
+/* ══ MASTHEAD ══ */
+.masthead{
+  position:sticky;top:0;z-index:200;
+  background:rgba(2,5,16,0.8);
+  backdrop-filter:blur(24px) saturate(1.5);
+  -webkit-backdrop-filter:blur(24px) saturate(1.5);
+  border-bottom:1px solid rgba(100,150,255,0.1);
+  padding:11px 36px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.masthead::after{
+  content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(180,210,255,0.2),transparent);
+}
+.masthead-left{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--txt-muted);
+}
+.masthead-left em{color:var(--gold-bright);font-style:normal}
+.masthead-right{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--txt-muted);letter-spacing:.1em;
+}
+
+/* ══ HERO ══ */
+.hero{
+  position:relative;
+  min-height:100vh;
+  display:flex;flex-direction:column;justify-content:flex-end;
+  padding:0 36px 84px;
+  overflow:hidden;z-index:1;
+}
+.hero-aurora{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 110% 75% at 50% -5%, rgba(19,64,160,0.5) 0%, transparent 58%),
+    radial-gradient(ellipse 55% 50% at 12% 55%, rgba(30,92,216,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse 45% 40% at 88% 38%, rgba(10,29,62,0.3) 0%, transparent 50%);
+  animation:aurora 14s ease-in-out infinite alternate;
+}
+@keyframes aurora{
+  0%{opacity:.85;transform:scale(1) translateY(0)}
+  100%{opacity:1;transform:scale(1.05) translateY(-1.5%)}
+}
+
+/* Hero hologram overlay */
+.hero-holo{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(100,160,255,0.015) 3px,
+      rgba(100,160,255,0.015) 4px
+    );
+  animation:scanlines 8s linear infinite;
+}
+@keyframes scanlines{
+  0%{background-position:0 0}
+  100%{background-position:0 100px}
+}
+
+.hero-rings-bg{
+  position:absolute;bottom:-140px;right:-120px;
+  width:720px;height:720px;
+  opacity:.06;pointer-events:none;
+  animation:slowSpin 80s linear infinite;
+}
+@keyframes slowSpin{to{transform:rotate(360deg)}}
+
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.particle{
+  position:absolute;width:2px;height:2px;border-radius:50%;
+  background:var(--chrome-light);
+  animation:float linear infinite;opacity:0;
+}
+@keyframes float{
+  0%{transform:translateY(100vh) rotate(0deg);opacity:0}
+  10%{opacity:.5}90%{opacity:.2}
+  100%{transform:translateY(-30px) rotate(540deg);opacity:0}
+}
+
+.hero-content{position:relative;z-index:2;max-width:var(--col);margin:0 auto;width:100%}
+.hero-eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--gold-bright);margin-bottom:26px;
+  opacity:0;transform:translateY(14px);
+  animation:riseUp .8s .2s cubic-bezier(.16,1,.3,1) forwards;
+  display:flex;align-items:center;gap:16px;
+}
+.hero-eyebrow::before{content:'';display:block;width:28px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-mid))}
+
+.hero h1{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(60px,9.5vw,128px);
+  font-weight:900;line-height:.95;letter-spacing:.01em;
+  margin-bottom:34px;
+  opacity:0;transform:translateY(20px);
+  animation:riseUp .95s .45s cubic-bezier(.16,1,.3,1) forwards;
+}
+.hero h1 .line1{display:block;color:var(--chrome-bright);font-style:italic}
+.hero h1 .line2{
+  display:block;
+  background:linear-gradient(125deg, var(--gold-bright) 0%, var(--gold-mid) 38%, #fff3b0 65%, var(--gold-bright) 100%);
+  background-size:200% 100%;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4s ease-in-out infinite 2s;
+}
+@keyframes shimmer{
+  0%,100%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+}
+.hero h1 .line3{
+  display:block;
+  color:var(--azure);
+  font-size:.48em;letter-spacing:.12em;font-weight:700;font-style:normal;
+  text-shadow:0 0 30px rgba(66,133,244,0.4);
+}
+
+.hero-lead{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(18px,2.2vw,24px);
+  color:var(--chrome-bright);font-weight:300;
+  font-style:italic;line-height:1.62;max-width:560px;
+  opacity:0;transform:translateY(14px);
+  animation:riseUp .8s .72s cubic-bezier(.16,1,.3,1) forwards;
+  margin-bottom:36px;
+}
+.hero-meta{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--txt-muted);letter-spacing:.1em;
+  opacity:0;animation:riseUp .7s 1.05s cubic-bezier(.16,1,.3,1) forwards;
+  display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+}
+.hero-meta span{display:flex;align-items:center;gap:6px}
+.hero-meta span::before{content:'▸';color:var(--azure);font-size:8px}
+
+.scroll-hint{
+  position:absolute;bottom:34px;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:9px;
+  font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.22em;
+  color:var(--txt-muted);text-transform:uppercase;
+  animation:pulse 2.4s ease-in-out infinite;z-index:2;
+}
+.scroll-hint::after{
+  content:'';display:block;width:1px;height:42px;
+  background:linear-gradient(to bottom,var(--azure),transparent);
+}
+@keyframes pulse{0%,100%{opacity:.35}50%{opacity:.85}}
+@keyframes riseUp{to{opacity:1;transform:none}}
+
+/* ══ KPI STRIP ══ */
+.kpi-strip{
+  position:relative;z-index:1;
+  display:flex;flex-wrap:wrap;
+  background:rgba(2,8,22,0.8);
+  backdrop-filter:blur(28px);
+  -webkit-backdrop-filter:blur(28px);
+  border-top:1px solid rgba(100,150,255,0.12);
+  border-bottom:1px solid rgba(100,150,255,0.12);
+}
+/* Hologram shimmer on strip */
+.kpi-strip::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,
+    transparent 20%,
+    rgba(180,210,255,0.04) 40%,
+    rgba(200,230,255,0.07) 50%,
+    rgba(180,210,255,0.04) 60%,
+    transparent 80%
+  );
+  animation:holoSweep 6s ease-in-out infinite;
+}
+@keyframes holoSweep{
+  0%{transform:translateX(-100%)}
+  100%{transform:translateX(100%)}
+}
+
+.kpi{
+  flex:1;min-width:140px;
+  padding:28px 32px;
+  border-right:1px solid rgba(100,150,255,0.09);
+  position:relative;overflow:hidden;cursor:default;transition:background .3s;
+}
+.kpi:last-child{border-right:none}
+.kpi::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--azure),var(--gold-bright));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .45s cubic-bezier(.16,1,.3,1);
+}
+.kpi:hover{background:rgba(30,92,216,0.08)}
+.kpi:hover::after{transform:scaleX(1)}
+.kpi-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.18em;margin-bottom:8px}
+.kpi-val{
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;
+  font-size:44px;letter-spacing:.02em;
+  background:linear-gradient(135deg,var(--gold-bright),var(--gold-mid));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  line-height:1;
+}
+.kpi-sub{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txt-muted);margin-top:6px}
+
+/* ══ LAYOUT ══ */
+.container{max-width:var(--col);margin:0 auto;padding:0 36px;position:relative;z-index:1}
+.wide{max-width:var(--wide);margin:0 auto;padding:0 36px;position:relative;z-index:1}
+
+/* ══ SECTIONS ══ */
+.section{padding:96px 0 80px;position:relative;z-index:1}
+
+.section-divider{
+  width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(100,150,255,0.18),rgba(180,210,255,0.3),rgba(100,150,255,0.18),transparent);
+  margin:0;position:relative;z-index:1;
+}
+/* Divider glow dot */
+.section-divider::after{
+  content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  font-size:8px;color:rgba(180,210,255,0.4);
+  text-shadow:0 0 8px rgba(130,180,255,0.6);
+}
+
+.section-num{
+  font-family:'JetBrains Mono',monospace;font-size:10px;
+  color:var(--azure);letter-spacing:.22em;text-transform:uppercase;
+  display:flex;align-items:center;gap:14px;margin-bottom:22px;
+}
+.section-num::before{content:'';display:block;width:22px;height:1px;background:linear-gradient(90deg,transparent,var(--azure))}
+
+h2{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:clamp(40px,5.5vw,76px);
+  font-weight:800;line-height:.97;letter-spacing:.01em;
+  margin-bottom:24px;color:var(--chrome-bright);
+}
+h2 em{
+  background:linear-gradient(125deg,var(--gold-bright),var(--gold-mid));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-style:italic;
+}
+.lead{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(18px,2vw,22px);color:var(--chrome-light);
+  font-weight:300;font-style:italic;line-height:1.65;margin-bottom:28px;
+}
+p{margin-bottom:20px;color:var(--txt-secondary);line-height:1.75}
+strong{color:var(--txt-primary);font-weight:600}
+code{
+  font-family:'JetBrains Mono',monospace;font-size:13px;
+  background:rgba(30,92,216,0.2);color:var(--mist);
+  padding:2px 8px;border-radius:3px;
+  border:1px solid rgba(100,150,255,0.2);
+}
+
+/* ══ HOLOGRAM GLASS CARD ══ */
+.glass-card{
+  position:relative;overflow:hidden;
+  background:var(--glass-bg);
+  backdrop-filter:blur(24px) saturate(1.4);
+  -webkit-backdrop-filter:blur(24px) saturate(1.4);
+  border:1px solid var(--holo-border);
+  border-radius:2px;
+  padding:28px;margin:32px 0;
+  transition:border-color .35s, box-shadow .35s;
+}
+/* Top shine line */
+.glass-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent 5%,rgba(200,220,255,0.35) 30%,rgba(220,235,255,0.6) 50%,rgba(200,220,255,0.35) 70%,transparent 95%);
+}
+/* Hologram iridescent corner glow */
+.glass-card::after{
+  content:'';position:absolute;top:-60px;right:-60px;
+  width:180px;height:180px;border-radius:50%;
+  background:radial-gradient(circle,rgba(130,180,255,0.1) 0%,transparent 70%);
+  pointer-events:none;
+  animation:holoCorner 8s ease-in-out infinite alternate;
+}
+@keyframes holoCorner{
+  0%{opacity:.5;transform:scale(1)}
+  100%{opacity:1;transform:scale(1.3)}
+}
+/* Subtle side rainbow shimmer */
+.glass-card .holo-strip{
+  position:absolute;top:0;left:0;bottom:0;width:3px;
+  background:linear-gradient(to bottom,
+    rgba(100,150,255,0.5),
+    rgba(130,220,180,0.4),
+    rgba(240,180,41,0.5),
+    rgba(200,100,220,0.4),
+    rgba(100,150,255,0.5)
+  );
+  background-size:100% 200%;
+  animation:holoStrip 4s ease-in-out infinite alternate;
+}
+@keyframes holoStrip{
+  0%{background-position:0 0;opacity:.6}
+  100%{background-position:0 100%;opacity:1}
+}
+.glass-card:hover{
+  border-color:rgba(160,200,255,0.35);
+  box-shadow:0 8px 48px rgba(6,18,40,0.7), 0 0 0 1px rgba(130,180,255,0.12), inset 0 1px 0 rgba(220,235,255,0.1);
+}
+.chart-title{font-family:'Inter',sans-serif;font-size:13px;font-weight:600;color:var(--chrome-bright);margin-bottom:4px;letter-spacing:.02em}
+.chart-sub{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txt-muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:18px}
+.chart-note{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txt-muted);margin-top:14px;padding-top:12px;border-top:1px solid rgba(100,150,255,0.1);line-height:1.6}
+
+/* ══ INSIGHT BOX ══ */
+.insight{
+  background:linear-gradient(135deg,rgba(19,64,160,0.28) 0%,rgba(8,22,54,0.6) 100%);
+  border:1px solid rgba(100,150,255,0.18);
+  border-left:none;
+  padding:22px 28px 22px 32px;margin:28px 0;
+  position:relative;overflow:hidden;
+  backdrop-filter:blur(12px);
+}
+.insight::before{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+  background:linear-gradient(to bottom,var(--azure),var(--gold-bright),var(--azure));
+  background-size:100% 200%;
+  animation:holoStrip 3s ease-in-out infinite alternate;
+}
+.insight::after{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,rgba(100,150,255,0.07) 0%,transparent 70%);
+  pointer-events:none;
+}
+.insight-label{
+  font-family:'JetBrains Mono',monospace;font-size:9px;
+  color:var(--gold-bright);letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px;
+  display:flex;align-items:center;gap:8px;
+}
+.insight-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(240,180,41,0.25),transparent)}
+.insight p{color:var(--chrome-light);font-size:15px;line-height:1.7;margin:0}
+.insight strong{color:var(--gold-bright)}
+
+/* ══ PULLQUOTE ══ */
+.pullquote{
+  border-left:2px solid var(--gold-mid);
+  padding:22px 32px;margin:36px 0;
+  background:linear-gradient(135deg,rgba(201,150,10,0.08) 0%,rgba(10,29,62,0.3) 100%);
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(18px,2.2vw,24px);
+  font-style:italic;line-height:1.5;color:var(--chrome-bright);position:relative;
+  backdrop-filter:blur(8px);
+  border-top:1px solid rgba(240,180,41,0.1);
+  border-right:1px solid rgba(100,150,255,0.1);
+  border-bottom:1px solid rgba(100,150,255,0.1);
+}
+.pullquote::before{
+  content:'"';position:absolute;top:-12px;left:26px;
+  font-size:72px;line-height:1;
+  color:rgba(201,150,10,0.12);font-family:'Cormorant Garamond',serif;
+}
+.pullquote cite{
+  display:block;font-family:'JetBrains Mono',monospace;
+  font-size:9px;font-style:normal;color:var(--gold-mid);
+  margin-top:14px;letter-spacing:.12em;text-transform:uppercase;
+}
+
+/* ══ MEDAL LIST ══ */
+.medal-list{list-style:none;margin:20px 0}
+.medal-row{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 0;border-bottom:1px solid rgba(100,150,255,0.07);
+  font-size:13px;cursor:default;transition:all .2s;
+}
+.medal-row:last-child{border:none}
+.medal-row:hover{background:rgba(30,92,216,0.1);margin:0 -12px;padding-left:12px;padding-right:12px}
+.m-rank{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt-muted);width:18px;text-align:right;flex-shrink:0}
+.m-noc{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:.06em;width:46px;color:var(--chrome-bright);flex-shrink:0}
+.m-bar-bg{flex:1;background:rgba(100,150,255,0.09);height:4px;border-radius:2px;overflow:hidden;position:relative}
+.m-bar-fill{
+  height:100%;border-radius:2px;
+  background:linear-gradient(90deg,var(--azure),var(--gold-bright));
+  transition:width 1.5s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.m-bar-fill::after{
+  content:'';position:absolute;top:0;right:0;bottom:0;width:20px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3));
+}
+.m-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt-secondary);width:54px;text-align:right;flex-shrink:0}
+
+/* ══ STATS GRID ══ */
+.stats-3{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:rgba(100,150,255,0.1);border:1px solid rgba(100,150,255,0.1);
+  margin:28px 0;
+}
+.stat-cell{
+  background:rgba(8,22,54,0.6);padding:24px 18px;text-align:center;
+  cursor:default;transition:background .25s;position:relative;overflow:hidden;
+}
+.stat-cell::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(100,150,255,0.05) 0%,transparent 60%);
+  opacity:0;transition:opacity .3s;
+}
+.stat-cell:hover::before{opacity:1}
+.stat-v{
+  font-family:'Barlow Condensed',sans-serif;font-weight:800;
+  font-size:40px;letter-spacing:.02em;
+  color:var(--chrome-bright);line-height:1;
+}
+.stat-v.gold{
+  background:linear-gradient(135deg,var(--gold-bright),var(--gold-mid));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.stat-v.red{color:#ff7070}
+.stat-l{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.12em;margin-top:7px}
+
+/* ══ TIMELINE ══ */
+.timeline{margin:36px 0}
+.tl-item{display:flex;gap:20px;margin-bottom:28px;cursor:default}
+.tl-item:hover .tl-year{color:var(--gold-bright)}
+.tl-year{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:24px;
+  letter-spacing:.03em;color:var(--txt-secondary);min-width:62px;line-height:1.2;
+  transition:color .25s;
+}
+.tl-sep{display:flex;flex-direction:column;align-items:center}
+.tl-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:linear-gradient(135deg,var(--azure),var(--gold-bright));
+  flex-shrink:0;margin-top:5px;transition:transform .25s;
+  box-shadow:0 0 10px rgba(66,133,244,0.55);
+}
+.tl-item:hover .tl-dot{transform:scale(1.7)}
+.tl-line{width:1px;background:rgba(100,150,255,0.13);flex:1;margin:4px 0}
+.tl-body{flex:1}
+.tl-title{font-weight:600;font-size:15px;margin-bottom:4px;color:var(--chrome-bright)}
+.tl-desc{font-size:13px;color:var(--txt-muted);line-height:1.62;margin:0}
+
+/* ══ SCROLL REVEAL ══ */
+.sr{opacity:0;transform:translateY(32px);transition:opacity .72s ease,transform .72s cubic-bezier(.16,1,.3,1)}
+.sr.show{opacity:1;transform:none}
+
+/* ══ TABS ══ */
+.tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+.tab{
+  padding:5px 15px;
+  background:rgba(30,92,216,0.1);
+  border:1px solid rgba(100,150,255,0.18);
+  color:var(--txt-muted);font-size:10px;cursor:pointer;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.08em;
+  transition:all .22s;border-radius:2px;
+}
+.tab.active,.tab:hover{
+  background:var(--azure);color:#fff;
+  border-color:var(--azure);
+  box-shadow:0 0 14px rgba(30,92,216,0.45);
+}
+
+/* ══ GENDER CHART ══ */
+.gender-wrap{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:center}
+.gender-donut{position:relative;width:180px;height:180px}
+.gender-stats{display:flex;flex-direction:column;gap:18px}
+.g-row{display:flex;flex-direction:column;gap:5px}
+.g-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--txt-muted);text-transform:uppercase;letter-spacing:.1em}
+.g-bar-bg{height:5px;background:rgba(100,150,255,0.09);border-radius:3px;overflow:hidden}
+.g-bar-fill{height:100%;border-radius:3px;transition:width 1.6s cubic-bezier(.4,0,.2,1)}
+.g-num{font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:30px;letter-spacing:.03em;line-height:1}
+
+/* ══ HEATMAP ══ */
+#heatmapGrid{border-radius:2px;overflow:hidden}
+
+/* ══ HOLOGRAM FLOATING ORBS (decorative) ══ */
+.holo-orb{
+  position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(100,160,255,0.08) 0%,transparent 70%);
+  animation:orbFloat ease-in-out infinite alternate;
+}
+@keyframes orbFloat{
+  0%{transform:translateY(0) scale(1)}
+  100%{transform:translateY(-18px) scale(1.06)}
+}
+
+/* ══ CONCLUDE GRID ══ */
+.conclude-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:40px}
+.conclude-cell{
+  background:rgba(8,22,54,0.55);
+  border:1px solid rgba(100,150,255,0.16);
+  border-top:2px solid transparent;
+  background-clip:padding-box;
+  padding:22px 24px;position:relative;overflow:hidden;
+  transition:border-color .3s,transform .3s;
+  backdrop-filter:blur(12px);
+}
+.conclude-cell::before{
+  content:'';position:absolute;top:-1px;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--azure),var(--gold-bright));
+}
+.conclude-cell::after{
+  content:'';position:absolute;top:0;right:0;width:60px;height:60px;
+  background:radial-gradient(circle at top right,rgba(100,160,255,0.08) 0%,transparent 70%);
+}
+.conclude-cell:hover{border-color:rgba(130,180,255,0.3);transform:translateY(-2px)}
+.conclude-cell.full{grid-column:1/-1}
+.conclude-num{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--gold-bright);letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.conclude-text{font-size:13px;color:var(--chrome-light);line-height:1.65}
+
+/* ══ CHROME DIVIDER LINE ══ */
+.chrome-line{
+  width:100%;height:1px;position:relative;z-index:1;
+  background:linear-gradient(90deg,transparent 0%,rgba(140,160,200,0.2) 20%,rgba(200,215,240,0.4) 50%,rgba(140,160,200,0.2) 80%,transparent 100%);
+}
+
+/* ══ FOOTER ══ */
+footer{
+  position:relative;z-index:1;
+  background:var(--abyss);
+  border-top:1px solid rgba(100,150,255,0.1);
+  padding:56px 36px;text-align:center;
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:.12em;line-height:2.4;
+  color:var(--txt-muted);
+}
+footer em{color:var(--gold-bright);font-style:normal}
+.footer-rings{display:flex;justify-content:center;gap:2px;margin-bottom:28px;opacity:.3}
+.footer-ring{width:28px;height:28px;border-radius:50%;border:2px solid}
+
+/* ══ LEGEND ══ */
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:10px;color:var(--txt-muted);font-family:'JetBrains Mono',monospace}
+.ldot{width:10px;height:10px;border-radius:2px;flex-shrink:0;display:inline-block}
+
+/* ══ RESPONSIVE ══ */
+@media(max-width:640px){
+  .kpi-strip{flex-direction:column}
+  .kpi{border-right:none;border-bottom:1px solid rgba(100,150,255,0.1)}
+  .stats-3{grid-template-columns:1fr 1fr}
+  .gender-wrap{grid-template-columns:1fr}
+  .conclude-grid{grid-template-columns:1fr}
+  .conclude-cell.full{grid-column:auto}
+  .masthead{flex-direction:column;gap:6px;text-align:center;padding:10px 16px}
+  h2{font-size:clamp(36px,9vw,56px)}
+  .hero h1{font-size:clamp(50px,12vw,80px)}
+}
+</style>
+</head>
+<body>
+
+<!-- BG LAYERS -->
+<div class="bg-base"></div>
+<div class="bg-noise"></div>
+<div class="bg-grid"></div>
+
+<div id="progress"></div>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-left">Midterm Project · <em>Đại học Kinh tế Quốc dân</em> · Khoa CNTT</div>
+  <div class="masthead-right">MSSV: 11247009 · Dataset: Olympic Athletes 1896–2016</div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-aurora"></div>
+  <div class="hero-holo"></div>
+
+  <svg class="hero-rings-bg" viewBox="0 0 720 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="360" cy="360" r="90"  stroke="#4285f4" stroke-width="1.5"/>
+    <circle cx="360" cy="360" r="160" stroke="#d4a800" stroke-width="1.5"/>
+    <circle cx="360" cy="360" r="230" stroke="#e8edf8" stroke-width="1.5"/>
+    <circle cx="360" cy="360" r="300" stroke="#1a8a5a" stroke-width="1.5"/>
+    <circle cx="360" cy="360" r="340" stroke="#c0302e" stroke-width="1.5"/>
+  </svg>
+
+  <div class="particles" id="particles"></div>
+
+  <!-- Hologram orbs -->
+  <div class="holo-orb" style="width:400px;height:400px;top:5%;left:-10%;animation-duration:9s"></div>
+  <div class="holo-orb" style="width:300px;height:300px;top:30%;right:-5%;animation-duration:12s;animation-delay:-4s;background:radial-gradient(circle,rgba(240,180,41,0.05) 0%,transparent 70%)"></div>
+
+  <div class="hero-content">
+    <p class="hero-eyebrow">271,116 bản ghi · 120 năm lịch sử · Python & pandas</p>
+    <h1>
+      <span class="line1">120 NĂM</span>
+      <span class="line2">OLYMPIC</span>
+      <span class="line3">Câu Chuyện Từ Dữ Liệu</span>
+    </h1>
+    <p class="hero-lead">Từ 241 vận động viên Athens 1896 đến 11,174 VĐV Rio 2016 — dữ liệu Olympic phản chiếu sự thay đổi của nhân loại suốt hơn một thế kỷ.</p>
+    <div class="hero-meta">
+      <span>Python · pandas</span>
+      <span>matplotlib · seaborn</span>
+      <span>Google Colab</span>
+      <span>Maven Analytics</span>
+    </div>
+  </div>
+  <div class="scroll-hint">Scroll</div>
+</div>
+
+<!-- KPI STRIP -->
+<div class="kpi-strip">
+  <div class="kpi">
+    <div class="kpi-label">Tổng VĐV</div>
+    <div class="kpi-val" id="c1">0</div>
+    <div class="kpi-sub">Sau xử lý bài 5</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Quốc gia</div>
+    <div class="kpi-val" id="c2">0</div>
+    <div class="kpi-sub">NOC codes</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Huy chương</div>
+    <div class="kpi-val" id="c3">0</div>
+    <div class="kpi-sub">Gold + Silver + Bronze</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Tuổi TB</div>
+    <div class="kpi-val">25.4</div>
+    <div class="kpi-sub">Median: 24 · Range: 10–97</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi-label">Môn thể thao</div>
+    <div class="kpi-val">66</div>
+    <div class="kpi-sub">66 sports · 35 editions</div>
+  </div>
+</div>
+
+<div class="chrome-line"></div>
+
+<!-- ═══ SECTION 1 ═══ -->
+<div class="section">
+  <div class="container sr">
+    <div class="section-num">01 · Tăng trưởng</div>
+    <h2>Olympic lớn lên <em>cùng thế giới</em></h2>
+    <p class="lead">Từ một cuộc thi nhỏ ở Athens với 241 vận động viên, Olympic đã trở thành sự kiện thể thao lớn nhất hành tinh — 46 lần lớn hơn sau 120 năm.</p>
+    <p>Chuỗi dữ liệu cho thấy một đường tăng trưởng gần như không ngừng nghỉ. Từ năm 1994, Olympic Mùa đông và Mùa hè tổ chức lệch năm nhau — biểu đồ hiển thị cả hai để đảm bảo đủ số liệu theo từng kỳ.</p>
+  </div>
+
+  <div class="wide sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">Số Lượng Vận Động Viên Tham Dự Qua Các Kỳ Olympic (1896–2016)</div>
+      <div class="chart-sub">Summer + Winter per edition · athletes_wide (bài 6) · từ 1994: lệch năm Summer/Winter</div>
+      <div class="tabs">
+        <button class="tab active" onclick="setLine('total',this)">Tổng VĐV</button>
+        <button class="tab" onclick="setLine('split',this)">Nam / Nữ riêng</button>
+        <button class="tab" onclick="setLine('sw',this)">Summer / Winter</button>
+        <button class="tab" onclick="setLine('pct',this)">% Tỷ lệ nữ</button>
+      </div>
+      <div style="position:relative;height:280px"><canvas id="lineChart"></canvas></div>
+      <p class="chart-note">↓ 1940–44: Olympic ngừng do Chiến tranh Thế giới II &nbsp;·&nbsp; ↓ 1980: Tẩy chay Moscow &nbsp;·&nbsp; ✦ 1994: Summer/Winter tách lịch &nbsp;·&nbsp; ↑ 2016 Rio: 11,174 VĐV</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="timeline sr">
+      <div class="tl-item">
+        <div class="tl-year">1896</div>
+        <div class="tl-sep"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-body"><div class="tl-title">Athens — Khởi đầu</div><p class="tl-desc">241 VĐV, 14 quốc gia, 43 nội dung. Toàn bộ là nam giới. Dữ liệu ghi chép còn thiếu sót — lý do Height/Weight thiếu ~22% ở bài 5.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">1900</div>
+        <div class="tl-sep"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-body"><div class="tl-title">Paris — Phụ nữ lần đầu</div><p class="tl-desc">22 nữ VĐV xuất hiện lần đầu. Dữ liệu sex = ['m','f'] — sau bài 5 chuẩn hóa lowercase.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">1948</div>
+        <div class="tl-sep"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-body"><div class="tl-title">London — Phục hồi sau Chiến tranh Thế giới II</div><p class="tl-desc">Olympic trở lại sau 12 năm ngưng. 4,104 VĐV tham dự. Khoảng trống 1940–44 thể hiện rõ trong biểu đồ đường bài 7.1.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">1994</div>
+        <div class="tl-sep"><div class="tl-dot"></div><div class="tl-line"></div></div>
+        <div class="tl-body"><div class="tl-title">Lillehammer — Summer & Winter tách lịch</div><p class="tl-desc">Từ 1994, Olympic Mùa đông tổ chức lệch 2 năm so với Mùa hè. Hai sự kiện kể từ đây độc lập hoàn toàn về lịch thi đấu.</p></div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-year">2016</div>
+        <div class="tl-sep"><div class="tl-dot"></div></div>
+        <div class="tl-body"><div class="tl-title">Rio — Đỉnh cao trong dataset</div><p class="tl-desc"><strong>11,174 VĐV</strong> (số thật từ athletes_wide bài 6), 206 quốc gia, tỷ lệ nữ đạt <strong>45.0%</strong>.</p></div>
+      </div>
+    </div>
+    <div class="insight sr">
+      <div class="insight-label">Insight 01 — Tăng trưởng</div>
+      <p>Số VĐV tăng từ <strong>241 (1896)</strong> lên <strong>11,174 (2016)</strong> — tăng <strong>46 lần</strong>. Chỉ 3 gián đoạn lớn: Chiến tranh Thế giới I, Chiến tranh Thế giới II, và tẩy chay 1980–1984. Tốc độ tăng mạnh nhất từ thập kỷ 1980s — trùng với sự mở rộng toàn cầu hóa sau Chiến Tranh Lạnh.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 2 ═══ -->
+<div class="section">
+  <div class="container sr">
+    <div class="section-num">02 · Quyền lực thể thao</div>
+    <h2>Ai <em>thống trị</em> Olympic?</h2>
+    <p class="lead">Nhìn vào bảng tổng sắp huy chương, câu trả lời hiện ra rõ ràng — và phản ánh không chỉ thể thao mà còn cả địa chính trị suốt thế kỷ 20.</p>
+    <p>Sau khi áp dụng <code>groupby + pivot_table</code> lên 39,772 huy chương, dữ liệu vẽ ra bức tranh tập trung quyền lực: chỉ 3 quốc gia chiếm gần <strong>25%</strong> tổng huy chương mọi thời đại.</p>
+  </div>
+  <div class="container sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">Top 8 Quốc Gia Nhiều Huy Chương Nhất — Mọi Thời Đại</div>
+      <div class="chart-sub">medal_pivot từ bài 6 · groupby NOC × medal type · sorted by Total</div>
+      <ul class="medal-list" id="medalList"></ul>
+      <p class="chart-note">NOC lowercase sau bài 5 · URS = Liên Xô (giải thể 1991) · GDR = Đông Đức (thống nhất 1990)</p>
+    </div>
+  </div>
+  <div class="container sr">
+    <div class="pullquote">
+      "USA dẫn đầu với 5,637 huy chương — gần gấp đôi URS đứng thứ 2. Nhưng tỷ lệ HCV/VĐV của URS là <strong>85.1%</strong> so với 58.4% của USA — Liên Xô chuyên biệt hóa cao hơn nhiều."
+      <cite>— country_kpi từ pd.merge bài 6: total_medals / total_athletes × 100</cite>
+    </div>
+    <div class="stats-3">
+      <div class="stat-cell"><div class="stat-v gold">5,637</div><div class="stat-l">HCV của USA</div></div>
+      <div class="stat-cell"><div class="stat-v">85.1%</div><div class="stat-l">Tỷ lệ HCV/VĐV của URS</div></div>
+      <div class="stat-cell"><div class="stat-v red">74.1%</div><div class="stat-l">Tỷ lệ HCV/VĐV của GDR</div></div>
+    </div>
+    <div class="insight sr">
+      <div class="insight-label">Insight 02 — Địa chính trị</div>
+      <p>Bảng huy chương phản ánh <strong>trật tự địa chính trị thế kỷ 20</strong>. URS và GDR có tỷ lệ HCV/VĐV cao bất thường (85% và 74%) so với Mỹ (58%) — cho thấy các quốc gia XHCN chọn VĐV rất chọn lọc, chỉ gửi những người có khả năng đoạt huy chương cao nhất.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 3 ═══ -->
+<div class="section">
+  <div class="container sr">
+    <div class="section-num">03 · Bình đẳng giới</div>
+    <h2>Hành trình 120 năm <em>bình đẳng</em></h2>
+    <p class="lead">Không có câu chuyện nào trong dữ liệu Olympic nổi bật hơn sự thay đổi vai trò của phụ nữ — từ không được phép thi đấu đến gần ngang bằng nam giới.</p>
+    <p>Sau khi dùng <code>unstack + female_pct</code> trên athletes_wide, biểu đồ tỷ lệ nữ hiện ra như một đường tăng trưởng đáng kinh ngạc.</p>
+  </div>
+  <div class="wide sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">Phân Bố Nam / Nữ Vận Động Viên Olympic Theo Thập Kỷ (Stacked Bar)</div>
+      <div class="chart-sub">athletes_wide từ bài 6 · groupby decade × sex</div>
+      <div style="position:relative;height:260px"><canvas id="genderStackedChart"></canvas></div>
+      <p class="chart-note">Tỷ lệ nữ: 0% (1890s) → 2% (1900s) → 44% (2010s) · Dữ liệu sau xử lý duplicate bài 5</p>
+    </div>
+  </div>
+  <div class="container sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">Phân Bố Giới Tính — Toàn Dataset</div>
+      <div class="chart-sub">df['sex'].value_counts() sau bài 5 lowercase: 'm' / 'f'</div>
+      <div class="gender-wrap">
+        <div class="gender-donut"><canvas id="genderDonut"></canvas></div>
+        <div class="gender-stats">
+          <div class="g-row">
+            <div class="g-label">Nam (m) — 196,827 VĐV</div>
+            <div class="g-bar-bg"><div class="g-bar-fill" id="mbar" style="width:0%;background:linear-gradient(90deg,#1e5cd8,#4285f4)"></div></div>
+            <div class="g-num" style="color:#4285f4">73.0%</div>
+          </div>
+          <div class="g-row">
+            <div class="g-label">Nữ (f) — 72,904 VĐV</div>
+            <div class="g-bar-bg"><div class="g-bar-fill" id="fbar" style="width:0%;background:linear-gradient(90deg,#c0302e,#ff7070)"></div></div>
+            <div class="g-num" style="color:#ff7070">27.0%</div>
+          </div>
+        </div>
+      </div>
+      <p class="chart-note">Tỷ lệ tính trên 269,731 hàng sau xử lý bài 5 (fillna + drop_duplicates)</p>
+    </div>
+    <div class="stats-3">
+      <div class="stat-cell"><div class="stat-v red">0%</div><div class="stat-l">Tỷ lệ nữ — Athens 1896</div></div>
+      <div class="stat-cell"><div class="stat-v">27.0%</div><div class="stat-l">Trung bình toàn dataset</div></div>
+      <div class="stat-cell"><div class="stat-v gold">45.0%</div><div class="stat-l">Tỷ lệ nữ — Rio 2016</div></div>
+    </div>
+    <div class="insight sr">
+      <div class="insight-label">Insight 03 — Bình đẳng giới</div>
+      <p>Từ <strong>0% → 45%</strong> trong 120 năm. Tốc độ tăng nhanh nhất từ 1980s (18%) đến 2010s (44%). Nếu xu hướng tiếp tục, Olympic 2024 Paris dự kiến đạt <strong>50% bình đẳng hoàn toàn</strong> — và thực tế đã xảy ra đúng như vậy, Paris 2024 là kỳ Olympic đầu tiên có 50/50 nam nữ.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 4 ═══ -->
+<div class="section">
+  <div class="container sr">
+    <div class="section-num">04 · Tuổi vàng</div>
+    <h2>Đâu là <em>"tuổi vàng"</em> của VĐV?</h2>
+    <p class="lead">pivot_table và phép tính medal_rate theo age_group tiết lộ nhóm tuổi nào thực sự có lợi thế cao nhất.</p>
+    <p>Sau khi phân nhóm tuổi bằng <code>pd.cut</code> và tính tỷ lệ huy chương, kết quả từ bài 6 rõ ràng: nhóm <strong>29–38 tuổi</strong> có tỷ lệ 16.4% — cao nhất trong mọi nhóm tuổi.</p>
+  </div>
+  <div class="wide sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">Tỷ Lệ Giành Huy Chương (%) Theo Nhóm Tuổi × Giới Tính — Heatmap</div>
+      <div class="chart-sub">pivot_table bài 6 · age_group × sex · aggfunc = % has_medal</div>
+      <div id="heatmapGrid" style="margin-bottom:8px"></div>
+      <p class="chart-note">Số liệu thật từ seaborn heatmap bài 7.9 · Nhóm 28–32 (tương đương 29–38 bins) đỉnh cao nhất</p>
+    </div>
+  </div>
+  <div class="container sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">So Sánh Thể Chất: Có HCV vs Không HCV</div>
+      <div class="chart-sub">groupby has_medal · agg(['mean','median','std']) · bài 6 section 3.3</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(100,150,255,0.2)">
+              <th style="text-align:left;padding:8px 0;font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;color:var(--txt-muted);letter-spacing:.1em;font-weight:400">Nhóm</th>
+              <th style="text-align:right;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;color:var(--txt-muted);letter-spacing:.1em;font-weight:400">Tuổi TB</th>
+              <th style="text-align:right;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;color:var(--txt-muted);letter-spacing:.1em;font-weight:400">Cao TB (cm)</th>
+              <th style="text-align:right;padding:8px 0;font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;color:var(--txt-muted);letter-spacing:.1em;font-weight:400">Nặng TB (kg)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid rgba(100,150,255,0.08)">
+              <td style="padding:10px 0;font-weight:600;color:var(--gold-bright)">✦ Có HCV</td>
+              <td style="text-align:right;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--chrome-bright)">25.89</td>
+              <td style="text-align:right;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--chrome-bright)">177.00</td>
+              <td style="text-align:right;padding:10px 0;font-family:'JetBrains Mono',monospace;font-weight:500;color:var(--chrome-bright)">72.89</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(100,150,255,0.08)">
+              <td style="padding:10px 0;color:var(--txt-muted)">Không HCV</td>
+              <td style="text-align:right;padding:10px 12px;font-family:'JetBrains Mono',monospace;color:var(--txt-muted)">25.32</td>
+              <td style="text-align:right;padding:10px 12px;font-family:'JetBrains Mono',monospace;color:var(--txt-muted)">174.97</td>
+              <td style="text-align:right;padding:10px 0;font-family:'JetBrains Mono',monospace;color:var(--txt-muted)">70.14</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 0;font-style:italic;color:var(--txt-muted);font-size:12px">Chênh lệch</td>
+              <td style="text-align:right;padding:10px 12px;font-family:'JetBrains Mono',monospace;color:var(--gold-bright);font-size:12px">+0.57</td>
+              <td style="text-align:right;padding:10px 12px;font-family:'JetBrains Mono',monospace;color:var(--gold-bright);font-size:12px">+2.03 cm</td>
+              <td style="text-align:right;padding:10px 0;font-family:'JetBrains Mono',monospace;color:var(--gold-bright);font-size:12px">+2.75 kg</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="chart-note">Số liệu thật từ physical_compare — groupby has_medal .agg(['mean','median','std']).round(2)</p>
+    </div>
+    <div class="insight sr">
+      <div class="insight-label">Insight 04 — Tuổi vàng</div>
+      <p>Nhóm <strong>29–38 tuổi</strong> có tỷ lệ HCV cao nhất <strong>16.4%</strong>. VĐV có HCV cao hơn trung bình <strong>2.03cm</strong> và nặng hơn <strong>2.75kg</strong> — sự khác biệt nhỏ nhưng nhất quán trên toàn dataset 269,731 hàng. Kết hợp kinh nghiệm + thể lực đỉnh = lợi thế thực sự.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ═══ SECTION 5 ═══ -->
+<div class="section">
+  <div class="container sr">
+    <div class="section-num">05 · Môn thể thao</div>
+    <h2>Điền kinh: <em>Vương quốc</em> huy chương</h2>
+    <p class="lead">Không phải môn nào cũng có cơ hội như nhau. Cấu trúc thi đấu tạo ra sự phân bố huy chương rất chênh lệch giữa các môn.</p>
+  </div>
+  <div class="wide sr">
+    <div class="glass-card">
+      <div class="holo-strip"></div>
+      <div class="chart-title">Top 10 Môn Thể Thao Nhiều Huy Chương Nhất</div>
+      <div class="chart-sub">sport_pivot từ bài 6 · groupby sport × medal · sorted by Total desc</div>
+      <div style="position:relative;height:280px"><canvas id="sportChart"></canvas></div>
+      <p class="chart-note">Athletics: 3,969 · Swimming: 3,048 · Rowing: 2,945 · Gymnastics: 2,256 · Fencing: 1,743</p>
+    </div>
+  </div>
+  <div class="container sr">
+    <div class="insight">
+      <div class="insight-label">Insight 05 — Môn thể thao</div>
+      <p>Athletics dẫn đầu với <strong>3,969 huy chương</strong> — gấp 1.3 lần Swimming đứng thứ 2 (3,048). Lý do: Athletics có nhiều nội dung nhất (chạy, nhảy, ném, phối hợp...). <strong>Nếu muốn tối đa hóa huy chương cho một quốc gia, đầu tư vào Điền kinh và Bơi lội là chiến lược hiệu quả nhất</strong> dựa trên dữ liệu 120 năm.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section-divider"></div>
+
+<!-- ═══ CONCLUSION ═══ -->
+<div class="section">
+  <div class="container sr">
+    <div class="section-num">Tổng kết · Storytelling</div>
+    <h2>Olympic là <em>tấm gương</em> của nhân loại</h2>
+    <p class="lead">Qua 269,731 hàng dữ liệu, 39,772 huy chương và 120 năm lịch sử, Olympic kể câu chuyện về con người nhiều hơn là về thể thao.</p>
+    <p>Dữ liệu cho thấy Olympic không chỉ là đường đua hay bể bơi. Đó là <strong>bản đồ địa chính trị</strong> — nơi Mỹ và Liên Xô đua tranh qua huy chương. Đó là <strong>nhiệt kế xã hội</strong> — nơi tỷ lệ nữ VĐV tăng từ 0 lên 45% phản chiếu cuộc đấu tranh bình đẳng giới. Đó là <strong>khoa học của con người</strong> — nơi tuổi tác, chiều cao và kinh nghiệm cùng quyết định ai đứng trên bục vinh quang.</p>
+    <div class="pullquote" style="margin-top:44px">
+      "Phân tích dữ liệu tốt nhất là phân tích khiến bạn hiểu con người, không chỉ hiểu con số."
+      <cite>— Kết luận dự án · Khoa học Dữ liệu trong Kinh tế và Kinh doanh · NEU 2025</cite>
+    </div>
+    <div class="conclude-grid">
+      <div class="conclude-cell">
+        <div class="conclude-num">01 · Tăng trưởng</div>
+        <div class="conclude-text">241 → 11,174 VĐV trong 120 năm. 46 lần lớn hơn. Chỉ 3 gián đoạn lớn do chiến tranh và tẩy chay.</div>
+      </div>
+      <div class="conclude-cell">
+        <div class="conclude-num">02 · Quyền lực</div>
+        <div class="conclude-text">USA 5,637 HCV. URS tỷ lệ 85.1% — chuyên biệt hóa cực cao. Top 3 chiếm ~25% tổng huy chương.</div>
+      </div>
+      <div class="conclude-cell">
+        <div class="conclude-num">03 · Giới tính</div>
+        <div class="conclude-text">0% (1896) → 45.0% (2016). 120 năm để đến gần bình đẳng hoàn toàn. Paris 2024: 50/50.</div>
+      </div>
+      <div class="conclude-cell">
+        <div class="conclude-num">04 · Tuổi vàng</div>
+        <div class="conclude-text">29–38 tuổi: tỷ lệ HCV 16.4%. Cao hơn +2.03cm, nặng hơn +2.75kg so với không HCV.</div>
+      </div>
+      <div class="conclude-cell full">
+        <div class="conclude-num">05 · Môn thể thao</div>
+        <div class="conclude-text">Athletics 3,969 HCV dẫn đầu. Swimming 3,048. Đầu tư Điền kinh + Bơi lội = chiến lược tối ưu dựa trên 120 năm dữ liệu.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-rings">
+    <div class="footer-ring" style="border-color:#2a6dd9"></div>
+    <div class="footer-ring" style="border-color:#d4a800"></div>
+    <div class="footer-ring" style="border-color:#d0d8ee"></div>
+    <div class="footer-ring" style="border-color:#1a8a5a"></div>
+    <div class="footer-ring" style="border-color:#c0302e"></div>
+  </div>
+  <div>Dự án Midterm — Môn Khoa học Dữ liệu trong Kinh tế và Kinh doanh</div>
+  <div><em>Đại học Kinh tế Quốc dân (NEU)</em> · Khoa Công nghệ Thông tin · MSSV: 11247009</div>
+  <div style="margin-top:10px">Dataset: <em>Olympic Athletes 1896–2016</em> · Maven Analytics · athlete_events.csv + country_definitions.csv</div>
+  <div>Python · pandas · matplotlib · seaborn · Google Colab</div>
+</footer>
+
+<script>
+/* ══ PARTICLES ══ */
+(function(){
+  const c=document.getElementById('particles');
+  for(let i=0;i<65;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const s=Math.random()*3+1;
+    p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*22+14}s;animation-delay:${Math.random()*22}s`;
+    c.appendChild(p);
+  }
+})();
+
+/* ══ DATA — Linear X-axis (year as number) ══
+   Each dataset is {x: year, y: value} so Chart.js places points
+   on a true linear timeline — no zigzag between Summer & Winter.
+   Pre-1994: Summer & Winter share same year → plotted at same x.
+   Post-1993: different years → naturally separated on axis.
+*/
+
+// Summer editions
+const S = [
+  {x:1896,tot:241, m:241, f:0},
+  {x:1900,tot:997, m:975, f:22},
+  {x:1904,tot:651, m:629, f:22},
+  {x:1906,tot:884, m:877, f:7},
+  {x:1908,tot:2008,m:1999,f:9},
+  {x:1912,tot:2407,m:2359,f:48},
+  {x:1920,tot:2626,m:2591,f:35},
+  {x:1924,tot:3089,m:2954,f:135},
+  {x:1928,tot:2883,m:2724,f:159},
+  {x:1932,tot:1332,m:1206,f:126},
+  {x:1936,tot:3963,m:3632,f:331},
+  // 1940, 1944: no Games — gap shows naturally on linear axis
+  {x:1948,tot:4104,m:3714,f:390},
+  {x:1952,tot:4955,m:4407,f:548},
+  {x:1956,tot:3314,m:2938,f:376},
+  {x:1960,tot:5338,m:4727,f:611},
+  {x:1964,tot:5151,m:4473,f:678},
+  {x:1968,tot:5516,m:4735,f:781},
+  {x:1972,tot:7134,m:6075,f:1059},
+  {x:1976,tot:6084,m:4824,f:1260},
+  {x:1980,tot:5217,m:4064,f:1153},
+  {x:1984,tot:6829,m:5263,f:1566},
+  {x:1988,tot:8391,m:6197,f:2194},
+  {x:1992,tot:9356,m:6652,f:2704},
+  {x:1996,tot:10318,m:6797,f:3521},
+  {x:2000,tot:10651,m:6582,f:4069},
+  {x:2004,tot:10625,m:6296,f:4329},
+  {x:2008,tot:10942,m:6305,f:4637},
+  {x:2012,tot:10519,m:5992,f:4527},
+  {x:2016,tot:11174,m:6143,f:5031},
+];
+
+// Winter editions (1924–1992 share year with Summer; from 1994 own years)
+const W = [
+  {x:1924,tot:258, m:245, f:13},
+  {x:1928,tot:464, m:438, f:26},
+  {x:1932,tot:252, m:231, f:21},
+  {x:1936,tot:646, m:588, f:58},
+  {x:1948,tot:669, m:592, f:77},
+  {x:1952,tot:694, m:585, f:109},
+  {x:1956,tot:820, m:688, f:132},
+  {x:1960,tot:665, m:521, f:144},
+  {x:1964,tot:1091,m:891, f:200},
+  {x:1968,tot:1158,m:947, f:211},
+  {x:1972,tot:1006,m:801, f:205},
+  {x:1976,tot:1123,m:892, f:231},
+  {x:1980,tot:1072,m:839, f:233},
+  {x:1984,tot:1272,m:998, f:274},
+  {x:1988,tot:1423,m:1110,f:313},
+  {x:1992,tot:1801,m:1313,f:488},
+  // From 1994: own years
+  {x:1994,tot:1737,m:1215,f:522},
+  {x:1998,tot:2176,m:1489,f:687},
+  {x:2002,tot:2399,m:1513,f:886},
+  {x:2006,tot:2508,m:1548,f:960},
+  {x:2010,tot:2566,m:1522,f:1044},
+  {x:2014,tot:2780,m:1714,f:1066},
+];
+
+// Combined total (Summer + Winter same year = summed) for "Tổng" view
+// Build a map keyed by year
+const totalByYear = {};
+[...S, ...W].forEach(e=>{
+  totalByYear[e.x] = (totalByYear[e.x]||{x:e.x,tot:0,m:0,f:0});
+  totalByYear[e.x].tot += e.tot;
+  totalByYear[e.x].m   += e.m;
+  totalByYear[e.x].f   += e.f;
+});
+const COMBINED = Object.values(totalByYear).sort((a,b)=>a.x-b.x);
+
+// Gender stacked by decade (Summer only, from original data)
+const DECADES  = ['1890s','1900s','1910s','1920s','1930s','1940s','1950s','1960s','1970s','1980s','1990s','2000s','2010s'];
+const DECADE_M = [241,975,629,1999,2359,0,4407,4473,10810,9327,12849,13178,12148];
+const DECADE_F = [0,22,22,135,524,0,548,678,2058,2719,5408,7872,9668];
+
+// Medal pivot
+const TOP_NOC  = ['usa','urs','ger','gbr','fra','ita','swe','can'];
+const TOP_TOT  = [5637,2503,2165,2067,1767,1637,1536,1352];
+
+// Sport
+const SPORTS = ['Cycling','Wrestling','Hockey','Ice Hockey','Football','Fencing','Gymnastics','Rowing','Swimming','Athletics'];
+const S_VALS = [1263,1296,1528,1530,1571,1743,2256,2945,3048,3969];
+
+// Heatmap
+const HM_ROWS = ['<18','18-22','23-27','28-32','33-37','38+'];
+const HM_F    = [10.0,14.2,14.6,16.3,15.4,15.3];
+const HM_M    = [9.7, 14.4,17.9,18.1,15.9,12.8];
+
+/* ══ CHART THEME ══ */
+const CB  = '#4285f4', CR='#ff7070', CG='#f0b429', CS='#a8b4cc';
+const GRID= 'rgba(100,150,255,0.07)', TICK='#6b7899';
+const TT  = {
+  backgroundColor:'rgba(2,5,22,0.92)',
+  titleColor:'#ffd666',bodyColor:'#a8b4cc',
+  borderColor:'rgba(100,150,255,0.22)',borderWidth:1,
+  padding:12,cornerRadius:2,
+  titleFont:{family:'JetBrains Mono',size:11},
+  bodyFont:{family:'JetBrains Mono',size:10}
+};
+const BASE={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:TT},
+  animation:{duration:1200,easing:'easeInOutQuart'},
+  scales:{
+    x:{ticks:{color:TICK,font:{size:9,family:'JetBrains Mono'},maxRotation:45},grid:{color:GRID},border:{color:'rgba(100,150,255,0.1)'}},
+    y:{ticks:{color:TICK,font:{size:9,family:'JetBrains Mono'}},grid:{color:GRID},border:{color:'rgba(100,150,255,0.1)'}}
+  }
+};
+
+/* ══ LINE CHART — Linear X-axis (year as number) ══ */
+const LINE_OPT = {
+  ...BASE,
+  scales:{
+    x:{
+      type:'linear',
+      min:1894,max:2018,
+      ticks:{
+        color:TICK,font:{size:9,family:'JetBrains Mono'},
+        stepSize:8,maxRotation:0,
+        callback:v=>(v%8===0||v===1894)?'':v
+      },
+      grid:{color:GRID},border:{color:'rgba(100,150,255,0.1)'}
+    },
+    y:{
+      ...BASE.scales.y,
+      ticks:{...BASE.scales.y.ticks,callback:v=>(v/1000).toFixed(0)+'k'}
+    }
+  },
+  plugins:{
+    ...BASE.plugins,
+    legend:{display:true,position:'top',labels:{color:TICK,font:{size:10,family:'JetBrains Mono'},boxWidth:16,usePointStyle:true}},
+    tooltip:{
+      ...TT,
+      callbacks:{
+        title:items=>{
+          const x=items[0].parsed.x;
+          const ds=items[0].dataset.label||'';
+          return `${x} · ${ds}`;
+        },
+        label:item=>' VĐV: '+Math.round(item.parsed.y).toLocaleString()
+      }
+    }
+  }
+};
+
+function buildLineData(m){
+  if(m==='total') return {datasets:[{
+    data: COMBINED.map(e=>({x:e.x,y:e.tot})),
+    label:'Tổng VĐV (Hè + Đông)',
+    borderColor:CB,
+    backgroundColor:'rgba(66,133,244,0.08)',
+    fill:true,tension:.4,
+    pointRadius:3,pointHoverRadius:5,
+    pointBackgroundColor:CB,
+    borderWidth:2
+  }]};
+
+  if(m==='split') return {datasets:[
+    {data:COMBINED.map(e=>({x:e.x,y:e.m})),label:'Nam',borderColor:CB,fill:false,tension:.4,pointRadius:2,borderWidth:1.6},
+    {data:COMBINED.map(e=>({x:e.x,y:e.f})),label:'Nữ',borderColor:CR,fill:false,tension:.4,pointRadius:2,borderWidth:1.6,borderDash:[4,3]}
+  ]};
+
+  if(m==='sw') return {datasets:[
+    {
+      data:S.map(e=>({x:e.x,y:e.tot})),
+      label:'Mùa Hè ☀',
+      borderColor:CB,fill:false,tension:.4,
+      pointRadius:3.5,pointHoverRadius:5,
+      borderWidth:2
+    },
+    {
+      data:W.map(e=>({x:e.x,y:e.tot})),
+      label:'Mùa Đông ❄',
+      borderColor:'#88d4ff',fill:false,tension:.4,
+      pointRadius:3,pointHoverRadius:5,pointStyle:'triangle',
+      borderWidth:1.8,borderDash:[5,3]
+    }
+  ]};
+
+  // pct — summer only (winter pct not in dataset)
+  const pctLine = [{x:1894,y:50},{x:2018,y:50}];
+  return {datasets:[
+    {
+      data:S.map(e=>({x:e.x,y:+(e.f/e.tot*100).toFixed(1)})),
+      label:'% Nữ (Mùa Hè)',
+      borderColor:CR,backgroundColor:'rgba(255,112,112,0.07)',
+      fill:true,tension:.4,pointRadius:2.5,borderWidth:1.8
+    },
+    {
+      data:pctLine,label:'50%',
+      borderColor:'rgba(100,150,255,0.22)',borderDash:[8,5],
+      pointRadius:0,borderWidth:1,fill:false,tension:0
+    }
+  ]};
+}
+
+let lineChart = new Chart(document.getElementById('lineChart'),{
+  type:'line',
+  data:buildLineData('total'),
+  options: JSON.parse(JSON.stringify(LINE_OPT)) // deep clone
+});
+
+// Fix x-axis ticks to show every 8 years cleanly
+lineChart.options.scales.x.ticks.stepSize = 8;
+lineChart.options.scales.x.ticks.callback = v => {
+  const vals=[1896,1904,1912,1920,1928,1936,1944,1952,1960,1968,1976,1984,1992,2000,2008,2016];
+  return vals.includes(v)?v:'';
+};
+lineChart.update();
+
+function setLine(mode,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  const isPct=(mode==='pct');
+  lineChart.data=buildLineData(mode);
+  lineChart.options.scales.y.ticks.callback=isPct?v=>v+'%':v=>(v/1000).toFixed(0)+'k';
+  lineChart.update();
+}
+
+/* ══ STACKED BAR ══ */
+new Chart(document.getElementById('genderStackedChart'),{
+  type:'bar',
+  data:{
+    labels:DECADES,
+    datasets:[
+      {data:DECADE_M,label:'Nam',backgroundColor:'rgba(66,133,244,0.72)',stack:'s'},
+      {data:DECADE_F,label:'Nữ', backgroundColor:'rgba(255,112,112,0.72)',stack:'s'}
+    ]
+  },
+  options:{...BASE,
+    plugins:{...BASE.plugins,
+      legend:{display:true,position:'top',labels:{color:TICK,font:{size:10,family:'JetBrains Mono'},boxWidth:12}},
+      tooltip:{...TT,callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`}}
+    },
+    scales:{
+      x:{...BASE.scales.x,stacked:true},
+      y:{...BASE.scales.y,stacked:true,ticks:{...BASE.scales.y.ticks,callback:v=>(v/1000).toFixed(0)+'k'}}
+    }
+  }
+});
+
+/* ══ DONUT ══ */
+new Chart(document.getElementById('genderDonut'),{
+  type:'doughnut',
+  data:{labels:['Nam','Nữ'],datasets:[{data:[196827,72904],backgroundColor:[CB,CR],borderWidth:2,borderColor:'rgba(2,5,22,0.9)'}]},
+  options:{responsive:true,maintainAspectRatio:false,cutout:'70%',
+    animation:{animateRotate:true,duration:1500},
+    plugins:{legend:{display:false},tooltip:TT}}
+});
+
+/* ══ MEDAL LIST ══ */
+const maxT=TOP_TOT[0];
+TOP_NOC.forEach((noc,i)=>{
+  const li=document.createElement('li');
+  li.className='medal-row';
+  li.innerHTML=`<span class="m-rank">${i+1}</span><span class="m-noc">${noc}</span><div class="m-bar-bg"><div class="m-bar-fill" id="mf${i}" style="width:0%"></div></div><span class="m-val">${TOP_TOT[i].toLocaleString()}</span>`;
+  document.getElementById('medalList').appendChild(li);
+  setTimeout(()=>document.getElementById(`mf${i}`).style.width=Math.round(TOP_TOT[i]/maxT*100)+'%',400+i*130);
+});
+
+/* ══ SPORT CHART ══ */
+new Chart(document.getElementById('sportChart'),{
+  type:'bar',
+  data:{labels:SPORTS,datasets:[{
+    data:S_VALS,
+    backgroundColor:S_VALS.map(v=>v===Math.max(...S_VALS)?CG:'rgba(66,133,244,0.42)'),
+    hoverBackgroundColor:S_VALS.map(v=>v===Math.max(...S_VALS)?'#ffd666':CB),
+    borderRadius:2,borderSkipped:false
+  }]},
+  options:{...BASE,indexAxis:'y',
+    scales:{
+      x:{...BASE.scales.x,ticks:{...BASE.scales.x.ticks,callback:v=>v.toLocaleString()}},
+      y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,font:{size:10,family:'Inter',weight:'400'}}}
+    }
+  }
+});
+
+/* ══ HEATMAP — Silver-Chrome-Gold dark theme ══ */
+(function(){
+  const vals=[...HM_F,...HM_M];
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  function heat(v){
+    const t=(v-mn)/(mx-mn);
+    // Dark navy → chrome silver → gold
+    const stops=[
+      [6,18,42],      // 0.0 — deep navy
+      [30,60,120],    // 0.25 — cobalt
+      [80,110,180],   // 0.5 — steel blue
+      [180,200,230],  // 0.75 — chrome silver
+      [240,180,41]    // 1.0 — gold
+    ];
+    const seg=t*(stops.length-1);
+    const lo=Math.floor(seg),hi=Math.min(lo+1,stops.length-1);
+    const u=seg-lo;
+    const r=Math.round(stops[lo][0]+(stops[hi][0]-stops[lo][0])*u);
+    const g=Math.round(stops[lo][1]+(stops[hi][1]-stops[lo][1])*u);
+    const b=Math.round(stops[lo][2]+(stops[hi][2]-stops[lo][2])*u);
+    return `rgb(${r},${g},${b})`;
+  }
+  function tc(v){return (v-mn)/(mx-mn)>.62?'#020a18':'#e8edf8'}
+
+  let html=`<div style="display:grid;grid-template-columns:72px 1fr 1fr;gap:1px;background:rgba(100,150,255,0.1);font-family:'JetBrains Mono',monospace;font-size:11px;border:1px solid rgba(100,150,255,0.14);border-radius:2px;overflow:hidden">
+    <div style="background:rgba(8,22,54,0.8);padding:10px 8px;text-align:right;color:var(--txt-muted)">Nhóm</div>
+    <div style="background:rgba(20,50,100,0.6);padding:10px 8px;text-align:center;font-weight:600;color:var(--chrome-bright);letter-spacing:.05em">Nữ (F)</div>
+    <div style="background:rgba(20,50,100,0.6);padding:10px 8px;text-align:center;font-weight:600;color:var(--chrome-bright);letter-spacing:.05em">Nam (M)</div>`;
+  HM_ROWS.forEach((row,i)=>{
+    html+=`
+    <div style="background:rgba(8,22,54,0.7);padding:13px 8px;text-align:right;color:var(--txt-muted);display:flex;align-items:center;justify-content:flex-end">${row}</div>
+    <div style="background:${heat(HM_F[i])};padding:17px 8px;text-align:center;font-weight:700;color:${tc(HM_F[i])};font-size:14px;cursor:default;transition:filter .2s;letter-spacing:.02em" onmouseover="this.style.filter='brightness(1.12)'" onmouseout="this.style.filter='none'">${HM_F[i].toFixed(1)}%</div>
+    <div style="background:${heat(HM_M[i])};padding:17px 8px;text-align:center;font-weight:700;color:${tc(HM_M[i])};font-size:14px;cursor:default;transition:filter .2s;letter-spacing:.02em" onmouseover="this.style.filter='brightness(1.12)'" onmouseout="this.style.filter='none'">${HM_M[i].toFixed(1)}%</div>`;
+  });
+  html+='</div>';
+  document.getElementById('heatmapGrid').innerHTML=html;
+})();
+
+/* ══ COUNT-UP ══ */
+function countUp(el,target,dur=1900){
+  const s=performance.now();
+  (function step(now){
+    const p=Math.min((now-s)/dur,1);
+    const ease=1-Math.pow(1-p,4);
+    el.textContent=Math.round(ease*target).toLocaleString();
+    if(p<1)requestAnimationFrame(step);
+  })(s);
+}
+
+/* ══ INTERSECTION OBSERVERS ══ */
+const io=new IntersectionObserver(e=>{
+  e.forEach(x=>{if(x.isIntersecting){x.target.classList.add('show');io.unobserve(x.target)}});
+},{threshold:.12});
+document.querySelectorAll('.sr').forEach(el=>io.observe(el));
+
+const kpIo=new IntersectionObserver(e=>{
+  e.forEach(x=>{if(x.isIntersecting){
+    [['c1',269731],['c2',230],['c3',39772]].forEach(([id,v])=>{const el=document.getElementById(id);if(el)countUp(el,v)});
+    kpIo.disconnect();
+  }});
+},{threshold:.5});
+const strip=document.querySelector('.kpi-strip');
+if(strip)kpIo.observe(strip);
+
+const gbIo=new IntersectionObserver(e=>{
+  e.forEach(x=>{if(x.isIntersecting){
+    setTimeout(()=>{
+      document.getElementById('mbar').style.width='73%';
+      document.getElementById('fbar').style.width='27%';
+    },200);
+    gbIo.disconnect();
+  }});
+},{threshold:.4});
+const gw=document.querySelector('.gender-wrap');
+if(gw)gbIo.observe(gw);
+
+/* ══ PROGRESS BAR ══ */
+window.addEventListener('scroll',()=>{
+  const d=document.documentElement;
+  document.getElementById('progress').style.width=(d.scrollTop/(d.scrollHeight-d.clientHeight)*100)+'%';
+},{ passive:true });
+</script>
+</body>
+</html>
